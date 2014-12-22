@@ -238,25 +238,35 @@ var dataframe = (function() {
     this.setView([lat, lng], zoom, forceReset);
   };
 
-  methods.addMarker = function(lat, lng, layerId, options, eachOptions) {
-    var df = dataframe.create()
-      .col('lat', lat)
-      .col('lng', lng)
-      .col('layerId', layerId)
-      .cbind(options)
-      .cbind(eachOptions);
+methods.addMarker = function(lat, lng, layerId, options, eachOptions) {
+  var df = dataframe.create()
+    .col('lat', lat)
+    .col('lng', lng)
+    .col('layerId', layerId)
+    .cbind(options)
+    .cbind(eachOptions);
 
-    for (var i = 0; i < df.nrow(); i++) {
-      (function() {
-        var marker = L.marker([df.get(i, 'lat'), df.get(i, 'lng')], df.get(i));
-        var thisId = df.get(i, 'layerId');
-        this.markers.add(marker, thisId);
-        marker.on('click', mouseHandler(this.id, thisId, 'marker_click'), this);
-        marker.on('mouseover', mouseHandler(this.id, thisId, 'marker_mouseover'), this);
-        marker.on('mouseout', mouseHandler(this.id, thisId, 'marker_mouseout'), this);
-      }).call(this);
-    }
-  };
+  for (var i = 0; i < df.nrow(); i++) { 
+    (function() {
+      var markerOptions = df.get(i);
+
+      try {
+          var icon = df.get(i, 'icon');
+          icon = L.icon(icon);
+          markerOptions.icon = icon;
+      }
+      catch(err) {}
+      finally {
+          var marker = L.marker([df.get(i, 'lat'), df.get(i, 'lng')], markerOptions);
+          var thisId = df.get(i, 'layerId');
+          this.markers.add(marker, thisId);
+          marker.on('click', mouseHandler(this.id, thisId, 'marker_click'), this);
+          marker.on('mouseover', mouseHandler(this.id, thisId, 'marker_mouseover'), this);
+          marker.on('mouseout', mouseHandler(this.id, thisId, 'marker_mouseout'), this);
+      }
+    }).call(this);
+  }
+};
 
   methods.addCircleMarker = function(lat, lng, radius, layerId, options, eachOptions) {
     var df = dataframe.create()
